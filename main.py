@@ -2,23 +2,34 @@ import yt_dlp
 import os
 
 
-def download_playlist(playlist_url, format_choice, ffmpeg_location="C:/Paths"):
+def download_playlist(
+    playlist_url,
+    format_choice,
+    output_path,
+    ffmpeg_location=None,
+):
     ydl_opts = {
-        "format": "bestaudio/best" if format_choice == "mp3" else "bestvideo+bestaudio/best",
-        "outtmpl": "%(title)s.%(ext)s",
+        "format": (
+            "bestaudio/best" if format_choice == "mp3" else "bestvideo+bestaudio/best"
+        ),
+        "outtmpl": os.path.join(output_path, "%(title)s.%(ext)s"),
     }
 
     if format_choice == "mp3":
-        ydl_opts["postprocessors"] = [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }]
+        ydl_opts["postprocessors"] = [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            }
+        ]
     else:
-        ydl_opts["postprocessors"] = [{
-            "key": "FFmpegVideoConvertor",
-            "preferedformat": "mp4",
-        }]
+        ydl_opts["postprocessors"] = [
+            {
+                "key": "FFmpegVideoConvertor",
+                "preferedformat": "mp4",
+            }
+        ]
 
     if ffmpeg_location:
         ydl_opts["ffmpeg_location"] = ffmpeg_location
@@ -34,12 +45,20 @@ def main():
         while format_choice not in ["mp3", "mp4"]:
             format_choice = input("Invalid choice. Please enter mp3 or mp4: ").lower()
 
-        ffmpeg_path = input("Enter the path to ffmpeg (leave blank if it's in PATH): ").strip()
+        output_path = input("Enter the output directory for downloaded files: ").strip()
+        while not os.path.isdir(output_path):
+            output_path = input(
+                "Invalid directory. Please enter a valid output directory: "
+            ).strip()
+
+        ffmpeg_path = input(
+            "Enter the path to ffmpeg (leave blank if it's in PATH): "
+        ).strip()
 
         if ffmpeg_path and os.path.exists(ffmpeg_path):
-            download_playlist(playlist_url, format_choice, ffmpeg_path)
+            download_playlist(playlist_url, format_choice, output_path, ffmpeg_path)
         else:
-            download_playlist(playlist_url, format_choice)
+            download_playlist(playlist_url, format_choice, output_path)
 
         another = input("Do you want to download another playlist? (yes/no): ").lower()
         if another != "yes":
